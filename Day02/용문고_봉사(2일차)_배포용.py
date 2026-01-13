@@ -78,7 +78,11 @@ class PongEnv:
         # action이 0이면 왼쪽으로 0.01 이동
         # action이 2이면 오른쪽으로 0.01 이동
         # hint: self.paddle_x를 증가 또는 감소시키세요
-        
+        if action== 0:
+            self.paddle_x -= 0.01#왼쪽
+        elif action ==2:
+            self.paddle_x += 0.01#오른쪽
+            
         
         
         
@@ -90,7 +94,8 @@ class PongEnv:
         # 공의 y 위치에 dy 속도를 더하기
         # hint: self.ball_x += ?, self.ball_y += ?
         
-        
+        self.ball_x += self.ball_dx
+        self.ball_y += self.ball_dy
         
         reward = 0.0
         done = False
@@ -100,15 +105,21 @@ class PongEnv:
         # ball_dx의 부호를 반대로 바꾸기
         # hint: self.ball_dx *= -1
         
+        # 좌우 벽 충돌
         
+       
+        if self.ball_x<=0.0 or self.ball_x>=1.0:
+            self.ball_dx *=-1
         
         
         # ✏️ TODO 4: 위쪽 벽 충돌 구현
         # 공의 y 위치가 0.0 이하이면
         # ball_dy의 부호를 반대로 바꾸기
         
+        #위쪽 벽 충돌
         
-        
+        if self.ball_y<=0.0:
+            self.ball_dy *=-1
 
         # ✏️ TODO 5: 패들 충돌 및 점수 시스템 구현
         # 공의 y 위치가 0.95 이상이면:
@@ -122,9 +133,18 @@ class PongEnv:
         # hint: abs(self.ball_x - self.paddle_x)로 거리 계산
         
         
-        
-        
-        
+        #아래쪽 벽 충돌 (패들)
+        if self.ball_y>= 0.95:
+            if abs(self.ball_x - self.paddle_x) <=self.paddle_width/ 2:
+        #패들에 맞음
+                self.ball_dy *=-1
+                self.score +=1
+                reward =1.0
+            else :
+        #패들 놓침 게임 오버
+                reward= -1.0
+                done= True
+            
         
         
         
@@ -140,7 +160,7 @@ class PongEnv:
         }
 
         return self._get_state(), reward, done, info
-
+    
     def _get_state(self):
         """
         ✏️ TODO 6: AI에게 줄 입력값(관측값) 추출
@@ -155,13 +175,14 @@ class PongEnv:
         
         hint: np.array([값1, 값2, ...], dtype=np.float32)
         """
-        return np.array([
             # 여기에 5개의 값을 채워넣으세요
             
-            
-            
-            
-            
+        return np.array([
+            self.ball_x,
+            self.ball_y,
+            self.paddle_x,
+            self.ball_dx,
+             self.ball_dy,
         ], dtype=np.float32)
 
 
@@ -195,8 +216,6 @@ class PongEnv:
         score_text = self.font.render(str(self.score), True, (255, 255, 255))
         self.screen.blit(score_text, (self.width // 2 - 30, 50))
         
-        # Miss 횟수 표시
-        self.screen.blit(miss_text, (self.width - 150, 20))
         
         pygame.display.flip()
         
